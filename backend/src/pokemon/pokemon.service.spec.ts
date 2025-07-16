@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PokemonService } from './pokemon.service';
 import { NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { of } from 'rxjs';
+import { Observable, of, Subscriber } from 'rxjs';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 describe('PokemonService', () => {
@@ -58,13 +58,49 @@ describe('PokemonService', () => {
     expect(cacheManager.set).toHaveBeenCalledWith('pokemon_types', types, expect.any(Number));
   });
 
-  it('should throw if no Pokémon match filters', async () => {
-    (httpService.get as jest.Mock).mockReturnValue(
-      of({ data: { results: [] } })
-    );
+  it('should return an empty result if no Pokémon match filters', async () => {
+    (httpService.get as jest.Mock).mockImplementation((url: string) => {
+      if (url.includes('/pokemon?limit=')) {
+        return of({ data: { results: [] } });
+      }
+      return of({ data: {} });
+    });
 
-    await expect(
-      service.search('zzzzz', '', 20, 0)
-    ).rejects.toThrow(NotFoundException);
+    (cacheManager.get as jest.Mock).mockResolvedValue(null);
+
+    const result = await service.search('zzzzz', '', 20, 0);
+
+    expect(result).toEqual({
+      data: [],
+      limit: 20,
+      offset: 0,
+      total: 0,
+    });
+    await expect(service.search('zzzzz', '', 20, 0)).resolves.not.toThrow();
+  });
+
+  it('should return an empty result if a non-existent type is filtered', async () => {
+    (httpService.get as jest.Mock).mockImplementation((url: string) => {
+      if (url.includes('/type/nonexistenttype')) {
+        return new (class extends Observable<any> {
+          _subscribe(subscriber: Subscriber<any>) {
+            subscriber.error(new Error('Request failed with status code 404'));
+          }
+        })();
+      }
+      return of({ data: { results: [] } });
+    });
+
+    (cacheManager.get as jest.Mock).mockResolvedValue(null);
+
+    const result = await service.search('', 'nonexistenttype', 20, 0);
+
+    expect(result).toEqual({
+      data: [],
+      limit: 20,
+      offset: 0,
+      total: 0,
+    });
+    await expect(service.search('', 'nonexistenttype', 20, 0)).resolves.not.toThrow();
   });
 });
