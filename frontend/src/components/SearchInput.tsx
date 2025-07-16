@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+// frontend/src/components/SearchInput.tsx
+import React, { useEffect, useState, useCallback } from 'react';
 import { TextField, InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import debounce from 'lodash.debounce';
@@ -6,32 +7,51 @@ import debounce from 'lodash.debounce';
 interface SearchInputProps {
   onSearch: (query: string) => void;
   delay?: number;
+  minLength?: number;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({ onSearch, delay = 300 }) => {
+const SearchInput: React.FC<SearchInputProps> = ({ 
+  onSearch, 
+  delay = 300,
+  minLength = 3
+}) => {
   const [query, setQuery] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
-  const debouncedSearch = React.useMemo(
-    () => debounce((searchQuery: string) => onSearch(searchQuery), delay),
-    [onSearch, delay],
+  // Función debounceada usando useCallback para mantener la misma referencia
+  const debouncedSearch = useCallback(
+    debounce((searchQuery: string) => {
+      setIsTyping(false);
+      if (searchQuery.length >= minLength || searchQuery.length === 0) {
+        onSearch(searchQuery);
+      }
+    }, delay),
+    [onSearch, delay, minLength]
   );
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = e.target.value;
+    setQuery(newQuery);
+    setIsTyping(true);
+    
+    // Solo ejecutar búsqueda si cumple con la longitud mínima o está vacío
+    if (newQuery.length >= minLength || newQuery.length === 0) {
+      debouncedSearch(newQuery);
+    }
+  };
+
+  // Limpieza del debounce al desmontar el componente
   useEffect(() => {
     return () => {
       debouncedSearch.cancel();
     };
   }, [debouncedSearch]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-    debouncedSearch(e.target.value);
-  };
-
   return (
     <TextField
       fullWidth
       variant="outlined"
-      placeholder="Search Pokémon by name or type..."
+      placeholder={`Search Pokémon by name or type (min ${minLength} chars)...`}
       value={query}
       onChange={handleChange}
       InputProps={{
@@ -40,6 +60,11 @@ const SearchInput: React.FC<SearchInputProps> = ({ onSearch, delay = 300 }) => {
             <SearchIcon />
           </InputAdornment>
         ),
+        endAdornment: isTyping && query.length >= minLength ? (
+          <InputAdornment position="end">
+            <div style={{ fontSize: '0.75rem', color: '#666' }}>Typing...</div>
+          </InputAdornment>
+        ) : null,
       }}
     />
   );

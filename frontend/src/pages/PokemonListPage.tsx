@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Container, CircularProgress, Alert, Box, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
@@ -13,8 +13,24 @@ const LIMIT = 20;
 const PokemonListPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [notification, setNotification] = useState<{
+    message: string;
+    severity: 'error' | 'warning' | 'info' | 'success';
+  } | null>(null);
   
   const offset = (page - 1) * LIMIT;
+
+  // Usamos un efecto para manejar la notificación de búsqueda muy corta
+  useEffect(() => {
+    if (searchQuery.length > 0 && searchQuery.length < 3) {
+      setNotification({
+        message: 'Please enter at least 3 characters to search',
+        severity: 'info',
+      });
+    } else {
+      setNotification(null);
+    }
+  }, [searchQuery]);
   
   const {
     data: pokemonsData,
@@ -29,6 +45,11 @@ const PokemonListPage: React.FC = () => {
     isFetching: isSearchFetching,
   } = useSearchPokemons(searchQuery, LIMIT, offset);
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setPage(1); // Reset a la primera página en cada nueva búsqueda
+  };
+
   const isLoading = isPokemonsLoading || isSearchLoading;
   const error = pokemonsError || searchError;
   const data = searchQuery.length > 0 ? searchData : pokemonsData;
@@ -37,27 +58,14 @@ const PokemonListPage: React.FC = () => {
     setPage(newPage);
   };
 
-  const [notification, setNotification] = useState<{
-    message: string;
-    severity: 'error' | 'warning' | 'info' | 'success';
-  } | null>(null);
-
-  const handleSearch = (query: string) => {
-    if (query.length > 0 && query.length < 1) {
-      setNotification({
-        message: 'Please enter at least 1 characters to search',
-        severity: 'warning',
-      });
-      return;
-    }
-    setSearchQuery(query);
-    setPage(1);
-  };
-
   if (error) {
     return (
       <Container sx={{ py: 4 }}>
-        <Alert severity="error">Error loading Pokémon data: {error.message}</Alert>
+        <Notification
+          message={`Error loading Pokémon: ${error.message}`}
+          severity="error"
+          onClose={() => setNotification(null)}
+        />
       </Container>
     );
   }
@@ -76,7 +84,11 @@ const PokemonListPage: React.FC = () => {
       </Typography>
 
       <Box sx={{ mb: 4 }}>
-        <SearchInput onSearch={handleSearch} />
+        <SearchInput 
+          onSearch={handleSearch} 
+          delay={500} 
+          minLength={3}
+        />
       </Box>
 
       {isLoading ? (

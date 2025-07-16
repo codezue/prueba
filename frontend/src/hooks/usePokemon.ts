@@ -20,8 +20,20 @@ export const useSearchPokemons = (
 ) => {
   return useQuery<PaginatedPokemon, Error>({
     queryKey: ['searchPokemons', query, limit, offset],
-    queryFn: () => searchPokemons(query, limit, offset),
-    enabled: query.length > 0
+    queryFn: () => {
+      // No hacer la búsqueda si la query es muy corta
+      if (query.length > 0 && query.length < 3) {
+        return Promise.resolve({
+          data: [],
+          total: 0,
+          limit,
+          offset,
+        });
+      }
+      return searchPokemons(query, limit, offset);
+    },
+    enabled: query.length >= 3, // Solo habilitar si tiene al menos 3 caracteres
+    staleTime: 1000 * 60 * 5, // 5 minutos de stale time
   });
 };
 
