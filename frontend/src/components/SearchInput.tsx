@@ -47,7 +47,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
     <TextField
       fullWidth
       variant="outlined"
-      placeholder={`Search Pokémon by name or type (min ${minLength} chars)...`}
+      placeholder={`Buscar por nombre (min ${minLength} caracteres)...`}
       value={query}
       onChange={handleChange}
       InputProps={{

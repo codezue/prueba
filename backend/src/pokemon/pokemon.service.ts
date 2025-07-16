@@ -82,7 +82,12 @@ export class PokemonService {
             (p: any) => p.pokemon.name
           );
         } catch {
-          throw new NotFoundException(`Pokemones con del tipo "${typeFilter}" no encontrados`);
+          return {
+            data: [],
+            total: 0,
+            limit,
+            offset,
+          };
         }
       } else {
         const allResponse = await firstValueFrom(
@@ -97,7 +102,12 @@ export class PokemonService {
       );
 
       if (filteredNames.length === 0) {
-        throw new NotFoundException(`Pokemones no encontrados con el filtro "${query || 'any'}"`);
+        return {
+          data: [],
+          total: 0,
+          limit,
+          offset,
+        };
       }
 
       const detailed = await Promise.all(
@@ -116,9 +126,7 @@ export class PokemonService {
       await this.cacheManager.set(cacheKey, result, 60 * 60 * 1000);
       return result;
     } catch (error) {
-      throw new NotFoundException(
-        `Pokemones no encontrados con el filtro de"${query || 'todos'}" o tipo "${typeFilter || 'todos'}"`
-      );
+      throw new Error('Ocurrió un error al buscar Pokémon');
     }
   }
 

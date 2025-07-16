@@ -42,7 +42,7 @@ export const usePokemonDetails = (idOrName: string) => {
   return useQuery<Pokemon, Error>({
     queryKey: ['pokemonDetails', idOrName],
     queryFn: () => fetchPokemonDetails(idOrName),
-    staleTime: 1000 * 60 * 60, // 1 hora
+    staleTime: 1000 * 60 * 60,
   });
 };
 
@@ -50,6 +50,6 @@ export const usePokemonTypes = () => {
   return useQuery<string[], Error>({
     queryKey: ['pokemonTypes'],
     queryFn: fetchPokemonTypes,
-    staleTime: 1000 * 60 * 60, // 1 hora
+    staleTime: 1000 * 60 * 60,
   });
 };

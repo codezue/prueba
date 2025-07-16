@@ -19,8 +19,8 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
   return (
     <Stack spacing={2} alignItems="center" sx={{ my: 4 }}>
       <Typography variant="body2" color="text.secondary">
-        Showing {(page - 1) * limit + 1}-
-        {Math.min(page * limit, count)} of {count} Pokémon
+        Mostrando {(page - 1) * limit + 1}-
+        {Math.min(page * limit, count)} de {count} Pokemones
       </Typography>
       <Pagination
         count={pageCount}

@@ -10,18 +10,28 @@ export const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    let errorMessage = 'An unexpected error occurred';
+    const isSearchNotFound = error.config?.url?.includes('/pokemon/search') && error.response?.status === 404;
+
+    if (isSearchNotFound) {
+      return Promise.resolve({
+        data: {
+          data: [],
+          total: 0,
+          limit: error.config?.params?.limit || 20,
+          offset: error.config?.params?.offset || 0,
+        },
+      });
+    }
+
+    let errorMessage = 'Ocurrió un error inesperado';
     
     if (error.response) {
-      // Error de servidor (4xx, 5xx)
-      errorMessage = error.response.data?.message || 
-                    error.response.statusText || 
-                    `Server responded with status ${error.response.status}`;
+      errorMessage = error.response.data?.message ||
+                     error.response.statusText ||
+                     `Server responde con status ${error.response.status}`;
     } else if (error.request) {
-      // La solicitud fue hecha pero no hubo respuesta
       errorMessage = 'No hubo respuesta del servidor.';
     } else {
-      // Error al configurar la solicitud
       errorMessage = error.message;
     }
 
@@ -30,5 +40,5 @@ apiClient.interceptors.response.use(
     enhancedError.stack = error.stack;
     
     return Promise.reject(enhancedError);
-  },
+  }
 );

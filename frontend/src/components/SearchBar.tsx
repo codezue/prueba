@@ -30,13 +30,13 @@ export const SearchBar: React.FC<Props> = ({
       </Box>
 
       <FormControl sx={{ minWidth: 200 }}>
-        <InputLabel>Filter by type</InputLabel>
+        <InputLabel>Tipos</InputLabel>
         <Select
           value={selectedType}
-          label="Filter by type"
+          label="Tipos"
           onChange={(e) => onTypeChange(e.target.value)}
         >
-          <MenuItem value="">All Types</MenuItem>
+          <MenuItem value="">Todos</MenuItem>
           {types.map((type) => (
             <MenuItem key={type} value={type}>
               {type.charAt(0).toUpperCase() + type.slice(1)}

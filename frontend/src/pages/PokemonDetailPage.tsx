@@ -49,14 +49,14 @@ const PokemonDetailPage: React.FC = () => {
         />
       )}
       <Typography variant="h4" align="center" sx={{ mb: 4 }}>
-        Pokémon Detail
+        Detalle Pokémon
       </Typography>
       <Button 
         variant="outlined" 
         onClick={() => navigate(-1)}
         sx={{ mb: 2 }}
       >
-        ← Volver a la lista
+        ← Volver al inicio
       </Button>
       <Paper sx={{ p: 4 }}>
         <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={4}>

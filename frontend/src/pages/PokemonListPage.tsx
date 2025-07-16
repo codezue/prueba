@@ -40,7 +40,7 @@ const PokemonListPage: React.FC = () => {
 
   const { 
     data: types, 
-    isLoading: loadingTypes 
+    //isLoading: loadingTypes 
   } = usePokemonTypes();
 
 
@@ -100,7 +100,7 @@ const PokemonListPage: React.FC = () => {
         />
       )}
       <Typography variant="h4" align="center" sx={{ mb: 4 }}>
-        Pokédex Explorer
+        App Pokemon
       </Typography>
 
       <SearchBar 
