@@ -1,78 +1,123 @@
-
 # 📱 App Pokemon
 
 Aplicación web fullstack para explorar Pokémon consumiendo la PokéAPI, implementada con NestJS + React, con soporte para búsqueda, filtros por tipo, paginación, uso de caché, y despliegue vía Docker + CI/CD con GitHub Actions.
 
+---
 
 ## 🛠️ Tecnologías Usadas
 
 ### Backend
 
-    NestJS (v11)
-
-    Axios para llamadas HTTP
-
-    Redis para caching
-
-    Docker
-
-    GitHub Actions para CI/CD
+- NestJS (v11)  
+- Axios para llamadas HTTP  
+- Redis para caching  
+- Docker  
+- GitHub Actions para CI/CD  
 
 ### Frontend
 
-    React (Vite + TypeScript)
+- React (Vite + TypeScript)  
+- React Router  
+- React Query para gestión de datos  
+- Material UI (MUI) para diseño de interfaz  
 
-    React Router
+---
 
-    React Query para gestión de datos
+## 📋 Requisitos previos
 
-    Material UI (MUI) para diseño de interfaz
+Antes de comenzar, asegúrate de tener instalado:
+
+- [Docker](https://www.docker.com/) y [Docker Compose](https://docs.docker.com/compose/)
+
+---
 
 ## 🚀 Instrucciones de instalación
 
-  1. Clona el repositorio
+### 1. Clona el repositorio
+
+```bash
+git clone https://github.com/codezue/prueba.git
+cd prueba
+```
+
+### 2. Configura las variables de entorno
+
+#### 🔧 Backend (`backend/.env`)
+
+Copia el archivo `.env.example` a `.env`:
+
+- En **Linux/macOS**:
 
   ```bash
-    git clone https://github.com/codezue/prueba.git
-    cd prueba
+  cp backend/.env.example backend/.env
   ```
-  2. Configura variables de entorno  
-   -  Backend(backend/.env)
 
-      Copia el archivo `.env.example` a `.env`:
-      ```bash
-      cp .env.example .env
-      ```
+- En **Windows (PowerShell)**:
 
-  -  Frontend(frontend/.env)
+  ```powershell
+  Copy-Item backend\.env.example backend\.env
+  ```
 
-      Copia el archivo `.env.example` a `.env`:
-      ```bash
-      cp .env.example .env
-      ```
+#### 🔧 Frontend (`frontend/.env`)
 
-Abre el archivo `.env` recién creado y configura las variables de entorno necesarias con tus propios valores.
+Copia el archivo `.env.example` a `.env`:
 
-  3. Levanta el enterno con Docker
+- En **Linux/macOS**:
 
   ```bash
-    docker-compose up --build -d
+  cp frontend/.env.example frontend/.env
   ```
-  
-  Esto iniciará:
 
-- Backend en http://localhost:3001
+- En **Windows (PowerShell)**:
 
-- Frontend en http://localhost
+  ```powershell
+  Copy-Item frontend\.env.example frontend\.env
+  ```
 
-- Redis como servicio para caché
+> Luego, abre los archivos `.env` creados y completa las variables necesarias con tus propios valores.
+
+---
+
+### 3. Levanta el entorno con Docker
+
+```bash
+docker-compose up --build -d
+```
+
+Esto iniciará:
+
+- Backend en [http://localhost:3001](http://localhost:3001)  
+- Frontend en [http://localhost](http://localhost)  
+- Redis como servicio para caché  
+
+---
+
 ## 🧠 Decisiones técnicas clave
 
- - Se utiliza Redis Cache para evitar múltiples llamadas innecesarias a la PokéAPI.
- - Separamos lógica de negocio en servicios reutilizables tanto en backend como frontend (hooks).
+- Se utiliza Redis Cache para evitar múltiples llamadas innecesarias a la PokéAPI.  
+- Se separa la lógica de negocio en servicios reutilizables tanto en el backend como en el frontend (hooks).  
+- El frontend permite filtrar por nombre y tipo de Pokémon, con búsqueda debounced y validación mínima de 3 caracteres.  
+- Se implementa paginación, manejo de errores y modal de detalle sin redirección.  
+- CI/CD automatizado mediante GitHub Actions, que ejecuta build, test y deploy.  
 
- - El frontend muestra resultados con filtros por nombre y tipo de Pokémon, con búsqueda debounced y validación mínima de 3 caracteres.
+---
 
- - Se maneja paginación, errores controlados y modal para detalle sin redirigir.
+## 🧹 Comandos útiles
 
- - Se implementó un flujo completo de CI/CD usando GitHub Actions, que realiza build, test y deploy.
+### Detener los contenedores
+
+```bash
+docker-compose down
+```
+
+### Ver logs
+
+```bash
+docker-compose logs -f
+```
+
+### Reconstruir sin usar caché
+
+```bash
+docker-compose build --no-cache
+```
