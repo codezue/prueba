@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// If using Vite, use import.meta.env; otherwise, declare process for TypeScript
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
 
 export const apiClient = axios.create({
@@ -20,7 +19,7 @@ apiClient.interceptors.response.use(
                     `Server responded with status ${error.response.status}`;
     } else if (error.request) {
       // La solicitud fue hecha pero no hubo respuesta
-      errorMessage = 'No response received from server';
+      errorMessage = 'No hubo respuesta del servidor.';
     } else {
       // Error al configurar la solicitud
       errorMessage = error.message;

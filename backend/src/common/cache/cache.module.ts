@@ -3,17 +3,30 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { redisStore } from 'cache-manager-redis-store';
 
+const DEFAULT_TTL = 3600;
+
+interface RedisConfig {
+  host: string;
+  port: number;
+  ttl: number;
+}
+
 @Module({
   imports: [
-    CacheModule.registerAsync({
+    CacheModule.registerAsync<RedisConfig>({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        store: redisStore,
-        host: configService.get('REDIS_HOST'),
-        port: configService.get('REDIS_PORT'),
-        ttl: configService.get('CACHE_TTL') || 3600, // 1 hora por defecto
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const host = configService.getOrThrow<string>('REDIS_HOST');
+        const port = configService.getOrThrow<number>('REDIS_PORT');
+        
+        return {
+          store: redisStore,
+          host,
+          port,
+          ttl: configService.get<number>('CACHE_TTL') ?? DEFAULT_TTL,
+        };
+      },
       isGlobal: true,
     }),
   ],

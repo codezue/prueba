@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
-
-import { Container, CircularProgress, Alert, Box, Typography } from '@mui/material';
+import { Container, CircularProgress, Box, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import { usePokemons, useSearchPokemons } from '../hooks/usePokemon';
+import { usePokemons, usePokemonTypes, useSearchPokemons } from '../hooks/usePokemon';
 import PokemonCard from '../components/PokemonCard';
-import SearchInput from '../components/SearchInput';
 import PaginationControls from '../components/PaginationControls';
 import { Notification } from '../components/Notification';
+import type { Pokemon } from '../models/pokemon';
+import PokemonDetailModal from '../components/PokemonDetailModal';
+import { SearchBar } from '../components/SearchBar';
 
 const LIMIT = 20;
 
 const PokemonListPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
     severity: 'error' | 'warning' | 'info' | 'success';
@@ -20,17 +23,7 @@ const PokemonListPage: React.FC = () => {
   
   const offset = (page - 1) * LIMIT;
 
-  // Usamos un efecto para manejar la notificación de búsqueda muy corta
-  useEffect(() => {
-    if (searchQuery.length > 0 && searchQuery.length < 3) {
-      setNotification({
-        message: 'Please enter at least 3 characters to search',
-        severity: 'info',
-      });
-    } else {
-      setNotification(null);
-    }
-  }, [searchQuery]);
+  
   
   const {
     data: pokemonsData,
@@ -43,32 +36,59 @@ const PokemonListPage: React.FC = () => {
     isLoading: isSearchLoading,
     error: searchError,
     isFetching: isSearchFetching,
-  } = useSearchPokemons(searchQuery, LIMIT, offset);
+  } = useSearchPokemons(searchQuery, selectedType, LIMIT, offset);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setPage(1); // Reset a la primera página en cada nueva búsqueda
-  };
+  const { 
+    data: types, 
+    isLoading: loadingTypes 
+  } = usePokemonTypes();
+
 
   const isLoading = isPokemonsLoading || isSearchLoading;
   const error = pokemonsError || searchError;
-  const data = searchQuery.length > 0 ? searchData : pokemonsData;
+  const isFiltered = searchQuery.length >= 3 || selectedType !== '';
+  const data = isFiltered ? searchData : pokemonsData; 
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setPage(1);
+  };
+
+  const handlePokemonClick = (pokemon: Pokemon) => {
+    setSelectedPokemon(pokemon);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedPokemon(null);
+  };
+
+  const handleNotificationClose = () => {
+    setNotification(null);
+  };
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
 
-  if (error) {
-    return (
-      <Container sx={{ py: 4 }}>
-        <Notification
-          message={`Error loading Pokémon: ${error.message}`}
-          severity="error"
-          onClose={() => setNotification(null)}
-        />
-      </Container>
-    );
-  }
+  useEffect(() => {
+    if (searchQuery.length > 0 && searchQuery.length < 3) {
+      setNotification({
+        message: 'Please enter at least 3 characters to search',
+        severity: 'info',
+      });
+    } else {
+      setNotification(null);
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (error) {
+      setNotification({
+        message: `Error loading Pokémon: ${error.message}`,
+        severity: 'error',
+      });
+    }
+  }, [error]);
 
   return (
     <Container sx={{ py: 4 }}>
@@ -83,32 +103,45 @@ const PokemonListPage: React.FC = () => {
         Pokédex Explorer
       </Typography>
 
-      <Box sx={{ mb: 4 }}>
-        <SearchInput 
-          onSearch={handleSearch} 
-          delay={500} 
-          minLength={3}
-        />
-      </Box>
+      <SearchBar 
+        types={types || []}
+        selectedType={selectedType}
+        onTypeChange={(value) => {
+          setSelectedType(value);
+          setPage(1);
+        }}
+        onSearch={handleSearch}
+      />
 
       {isLoading ? (
         <Box display="flex" flexDirection="column" alignItems="center" my={4}>
           <CircularProgress />
           <Typography variant="body2" sx={{ mt: 2 }}>
-            Loading Pokémon...
+            Cargando Pokemones...
           </Typography>
         </Box>
       ) : (
         <>
           <Grid container spacing={3}>
-            {data?.data.map((pokemon) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={pokemon.id}>
-                <PokemonCard pokemon={pokemon} />
-              </Grid>
-            ))}
+            {data?.data && data.data.length > 0 ? (
+                data.data.map((pokemon) => (
+                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={pokemon.id}>
+                    <PokemonCard 
+                      pokemon={pokemon} 
+                      onClick={() => handlePokemonClick(pokemon)}
+                    />
+                  </Grid>
+                ))
+              ) : (
+                <Grid size={{ xs:12}}>
+                  <Typography variant="body1" align="center">
+                    No existen Pokémones que coincidan con tu búsqueda.
+                  </Typography>
+                </Grid>
+              )}
           </Grid>
 
-          {data && (
+          {data && data.total > LIMIT && (
             <PaginationControls
               count={data.total}
               page={page}
@@ -124,6 +157,13 @@ const PokemonListPage: React.FC = () => {
           <CircularProgress size={24} />
         </Box>
       )}
+
+      <PokemonDetailModal 
+        pokemon={selectedPokemon} 
+        onClose={handleCloseModal}
+        notification={notification}
+        onNotificationClose={handleNotificationClose}
+      />
     </Container>
   );
 };

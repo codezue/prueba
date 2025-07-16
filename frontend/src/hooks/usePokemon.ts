@@ -3,6 +3,7 @@ import {
   fetchPokemons,
   searchPokemons,
   fetchPokemonDetails,
+  fetchPokemonTypes,
 } from '../services/pokemon.service';
 import type { PaginatedPokemon, Pokemon } from '../models/pokemon';
 
@@ -15,14 +16,14 @@ export const usePokemons = (limit: number = 20, offset: number = 0) => {
 
 export const useSearchPokemons = (
   query: string,
+  typeFilter: string,
   limit: number = 20,
   offset: number = 0,
 ) => {
   return useQuery<PaginatedPokemon, Error>({
-    queryKey: ['searchPokemons', query, limit, offset],
+    queryKey: ['searchPokemons', query, typeFilter, limit, offset],
     queryFn: () => {
-      // No hacer la búsqueda si la query es muy corta
-      if (query.length > 0 && query.length < 3) {
+      if ((query.length > 0 && query.length < 3) && !typeFilter) {
         return Promise.resolve({
           data: [],
           total: 0,
@@ -30,10 +31,10 @@ export const useSearchPokemons = (
           offset,
         });
       }
-      return searchPokemons(query, limit, offset);
+      return searchPokemons(query, typeFilter, limit, offset);
     },
-    enabled: query.length >= 3, // Solo habilitar si tiene al menos 3 caracteres
-    staleTime: 1000 * 60 * 5, // 5 minutos de stale time
+    enabled: query.length >= 3 || !!typeFilter,
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -41,6 +42,14 @@ export const usePokemonDetails = (idOrName: string) => {
   return useQuery<Pokemon, Error>({
     queryKey: ['pokemonDetails', idOrName],
     queryFn: () => fetchPokemonDetails(idOrName),
+    staleTime: 1000 * 60 * 60, // 1 hora
+  });
+};
+
+export const usePokemonTypes = () => {
+  return useQuery<string[], Error>({
+    queryKey: ['pokemonTypes'],
+    queryFn: fetchPokemonTypes,
     staleTime: 1000 * 60 * 60, // 1 hora
   });
 };

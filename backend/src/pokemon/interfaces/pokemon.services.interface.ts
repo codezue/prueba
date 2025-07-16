@@ -5,4 +5,5 @@ export interface IPokemonService {
   findAll(limit: number, offset: number): Promise<PaginatedPokemonDto>;
   findOne(idOrName: string): Promise<Pokemon>;
   search(query: string, limit: number, offset: number): Promise<PaginatedPokemonDto>;
+  getAllTypes(): Promise<string[]>
 }

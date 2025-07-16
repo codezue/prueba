@@ -6,14 +6,12 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configuración de CORS
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   });
 
-  // Configuración de Swagger
   const config = new DocumentBuilder()
     .setTitle('Pokémon API')
     .setDescription('API para consultar información de Pokémon')
@@ -23,7 +21,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // Validación global
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   
   await app.listen(process.env.PORT ?? 3000);

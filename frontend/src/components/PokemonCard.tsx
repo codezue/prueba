@@ -1,26 +1,19 @@
 import React from 'react';
 import { Card, CardContent, CardMedia, Typography, Chip, Stack } from '@mui/material';
 import type { Pokemon } from '../models/pokemon';
-import { useNavigate } from 'react-router-dom';
-
 
 interface PokemonCardProps {
   pokemon: Pokemon;
+  onClick: () => void;
 }
 
-const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon }) => {
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    navigate(`/pokemon/${pokemon.id}`);
-  };
-  
+const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon, onClick }) => {
   return (
     <Card
-      onClick={handleClick}
+      onClick={onClick}
       sx={{
         cursor: 'pointer',
-        transition: 'transform 0.2s',
+        transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'scale(1.03)',
           boxShadow: '0 4px 20px rgba(0,0,0,0.1)',

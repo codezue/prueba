@@ -1,4 +1,3 @@
-// frontend/src/components/SearchInput.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { TextField, InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -18,7 +17,6 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const [query, setQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
-  // Función debounceada usando useCallback para mantener la misma referencia
   const debouncedSearch = useCallback(
     debounce((searchQuery: string) => {
       setIsTyping(false);
@@ -34,13 +32,11 @@ const SearchInput: React.FC<SearchInputProps> = ({
     setQuery(newQuery);
     setIsTyping(true);
     
-    // Solo ejecutar búsqueda si cumple con la longitud mínima o está vacío
     if (newQuery.length >= minLength || newQuery.length === 0) {
       debouncedSearch(newQuery);
     }
   };
 
-  // Limpieza del debounce al desmontar el componente
   useEffect(() => {
     return () => {
       debouncedSearch.cancel();

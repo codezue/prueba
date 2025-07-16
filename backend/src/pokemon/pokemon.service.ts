@@ -16,14 +16,11 @@ export class PokemonService {
 
   async findAll(limit: number = 20, offset: number = 0): Promise<PaginatedPokemonDto> {
     const cacheKey = `pokemon_all_${limit}_${offset}`;
-    console.log(`Checking cache for key: ${cacheKey}`);
     const cachedData = await this.cacheManager.get<PaginatedPokemonDto>(cacheKey);
 
     if (cachedData) {
-      console.log('Cache HIT for key:', cacheKey);
       return cachedData;
     }
-    console.log('Cache MISS for key:', cacheKey);
 
     const response = await firstValueFrom(
       this.httpService.get(`${this.BASE_URL}?limit=${limit}&offset=${offset}`),
@@ -42,7 +39,6 @@ export class PokemonService {
       offset,
     };
 
-    console.log('Setting cache for key:', cacheKey);
     await this.cacheManager.set(cacheKey, result);
     return result;
   }
@@ -60,48 +56,89 @@ export class PokemonService {
     return pokemon;
   }
 
-  async search(query: string, limit: number = 20, offset: number = 0): Promise<PaginatedPokemonDto> {
-    const cacheKey = `pokemon_search_${query}_${limit}_${offset}`;
-    const cachedData = await this.cacheManager.get<PaginatedPokemonDto>(cacheKey);
+  async search(
+    query?: string,
+    typeFilter?: string,
+    limit = 20,
+    offset = 0
+  ): Promise<PaginatedPokemonDto> {
+    const normalizedType = typeFilter?.toLowerCase();
+    const normalizedQuery = query?.toLowerCase();
+    const cacheKey = `pokemon_search_${normalizedQuery || 'none'}_${normalizedType || 'none'}_${limit}_${offset}`;
 
-    if (cachedData) {
-        return cachedData;
-    }
+    const cachedData = await this.cacheManager.get<PaginatedPokemonDto>(cacheKey);
+    if (cachedData) return cachedData;
 
     try {
-        // Primero intentamos buscar directamente por nombre (puede ser un pokemon específico)
+      let candidateNames: string[] = [];
+
+      if (normalizedType) {
         try {
-            const pokemon = await this.getPokemonDetails(query);
-            return {
-                data: [pokemon],
-                total: 1,
-                limit,
-                offset: 0,
-            };
+          const typeResponse = await firstValueFrom(
+            this.httpService.get(`/type/${normalizedType}`)
+          );
+
+          candidateNames = typeResponse.data.pokemon.map(
+            (p: any) => p.pokemon.name
+          );
         } catch {
-            // Si no encuentra por nombre exacto, buscamos en la lista completa
-            const allPokemon = await this.findAll(10000, 0);
-            
-            const filtered = allPokemon.data.filter(p => 
-                p.name.toLowerCase().includes(query.toLowerCase()) ||
-                p.types.some(t => t.toLowerCase().includes(query.toLowerCase()))
-            );
-
-            const paginated = filtered.slice(offset, offset + limit);
-
-            const result = {
-                data: paginated,
-                total: filtered.length,
-                limit,
-                offset,
-            };
-
-            await this.cacheManager.set(cacheKey, result, 60 * 60 * 1000); // Cache por 1 hora
-            return result;
+          throw new NotFoundException(`Pokemones con del tipo "${typeFilter}" no encontrados`);
         }
+      } else {
+        const allResponse = await firstValueFrom(
+          this.httpService.get(`/pokemon?limit=10000&offset=0`)
+        );
+
+        candidateNames = allResponse.data.results.map((p: any) => p.name);
+      }
+
+      const filteredNames = candidateNames.filter(name =>
+        normalizedQuery ? name.includes(normalizedQuery) : true
+      );
+
+      if (filteredNames.length === 0) {
+        throw new NotFoundException(`Pokemones no encontrados con el filtro "${query || 'any'}"`);
+      }
+
+      const detailed = await Promise.all(
+        filteredNames.map(name => this.getPokemonDetails(name))
+      );
+
+      const paginated = detailed.slice(offset, offset + limit);
+
+      const result: PaginatedPokemonDto = {
+        data: paginated,
+        total: detailed.length,
+        limit,
+        offset,
+      };
+
+      await this.cacheManager.set(cacheKey, result, 60 * 60 * 1000);
+      return result;
     } catch (error) {
-        throw new NotFoundException(`No Pokémon found matching "${query}"`);
+      throw new NotFoundException(
+        `Pokemones no encontrados con el filtro de"${query || 'todos'}" o tipo "${typeFilter || 'todos'}"`
+      );
     }
+  }
+
+  async getAllTypes(): Promise<string[]> {
+    const cacheKey = 'pokemon_types';
+    const cached = await this.cacheManager.get<string[]>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    const response = await firstValueFrom(
+      this.httpService.get('/type')
+    );
+
+    const types = response.data.results
+      .map((type: any) => type.name)
+
+    await this.cacheManager.set(cacheKey, types, 60 * 60 * 1000);
+    return types;
   }
 
   private async getPokemonDetails(idOrName: string): Promise<Pokemon> {

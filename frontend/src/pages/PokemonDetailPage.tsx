@@ -17,7 +17,7 @@ const PokemonDetailPage: React.FC = () => {
   useEffect(() => {
     if (error) {
       setNotification({
-        message: `Error loading Pokémon: ${error.message}`,
+        message: `Error cargando Pokémon: ${error.message}`,
         severity: 'error',
       });
     }
@@ -34,7 +34,7 @@ const PokemonDetailPage: React.FC = () => {
   if (!pokemon) {
     return (
       <Container sx={{ py: 4 }}>
-        <Alert severity="warning">Pokémon not found</Alert>
+        <Alert severity="warning">Pokémon no encontrado</Alert>
       </Container>
     );
   }
@@ -53,7 +53,7 @@ const PokemonDetailPage: React.FC = () => {
       </Typography>
       <Button 
         variant="outlined" 
-        onClick={() => navigate(-1)} // O navigate('/') para ir al inicio
+        onClick={() => navigate(-1)}
         sx={{ mb: 2 }}
       >
         ← Volver a la lista
