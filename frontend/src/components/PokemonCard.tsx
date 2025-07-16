@@ -1,0 +1,59 @@
+import React from 'react';
+import { Card, CardContent, CardMedia, Typography, Chip, Stack } from '@mui/material';
+import type { Pokemon } from '../models/pokemon';
+import { useNavigate } from 'react-router-dom';
+
+
+interface PokemonCardProps {
+  pokemon: Pokemon;
+}
+
+const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/pokemon/${pokemon.id}`);
+  };
+  
+  return (
+    <Card
+      onClick={handleClick}
+      sx={{
+        cursor: 'pointer',
+        transition: 'transform 0.2s',
+        '&:hover': {
+          transform: 'scale(1.03)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        },
+      }}
+    >
+      <CardMedia
+        component="img"
+        height="140"
+        image={pokemon.imageUrl}
+        alt={pokemon.name}
+        sx={{ objectFit: 'contain', backgroundColor: '#f5f5f5' }}
+      />
+      <CardContent>
+        <Typography gutterBottom variant="h6" component="div" sx={{ textTransform: 'capitalize' }}>
+          {pokemon.name}
+        </Typography>
+        <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+          {pokemon.types.map((type) => (
+            <Chip
+              key={type}
+              label={type}
+              size="small"
+              sx={{ textTransform: 'capitalize' }}
+            />
+          ))}
+        </Stack>
+        <Typography variant="body2" color="text.secondary">
+          HP: {pokemon.stats.hp} | ATK: {pokemon.stats.attack}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default PokemonCard;
